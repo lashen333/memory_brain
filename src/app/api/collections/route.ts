@@ -1,0 +1,63 @@
+// src\app\api\collections\route.ts
+import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import type { ApiResponse, Collection } from '@/types'
+
+const createCollectionSchema = z.object({
+  name: z.string().min(1).max(50),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#7F77DD'),
+})
+
+// POST — create collection
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json<ApiResponse<null>>(
+        { data: null, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const parsed = createCollectionSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json<ApiResponse<null>>(
+        { data: null, error: parsed.error.issues[0]?.message },
+        { status: 400 }
+      )
+    }
+
+    const { data: collection, error } = await supabase
+      .from('collections')
+      .insert({
+        user_id: user.id,
+        name: parsed.data.name,
+        color: parsed.data.color,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      return NextResponse.json<ApiResponse<null>>(
+        { data: null, error: 'Failed to create collection' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json<ApiResponse<Collection>>(
+      { data: collection, error: null },
+      { status: 201 }
+    )
+
+  } catch {
+    return NextResponse.json<ApiResponse<null>>(
+      { data: null, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
