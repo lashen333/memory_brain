@@ -70,3 +70,21 @@ export interface ApiResponse<T> {
   data: T | null
   error: string | null
 }
+
+//RAG types
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  sources?: MemorySource[]
+  loading?: boolean
+}
+
+export interface MemorySource {
+  id: string
+  content: string
+  source_title: string | null
+  url: string | null
+  created_at: string
+  vault_type: string
+}
