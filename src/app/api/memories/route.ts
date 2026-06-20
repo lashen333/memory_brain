@@ -88,19 +88,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 5. Background embedding — do NOT await
+    // 5. Background: embed + detect connections (Fire-and-forget)
     // Vercel serverless: waitUntil not available,
     // so we fire-and-forget with .catch() for error logging
+    // Runs entirely asynchronously so the user gets a fast 201 response.
     generateEmbedding(content)
-      .then((embedding) =>
-        supabase
+      .then(async (embedding) => {
+        // 5a. Save the newly created vector embedding
+        const { error: updateError } = await supabase
           .from('memories')
           .update({ embedding })
           .eq('id', memory.id)
-      )
-      .catch((err) =>
-        console.error('Background embedding failed:', memory.id, err)
-      )
+
+        if (updateError) {
+          throw new Error(`Failed to save embedding: ${updateError.message}`)
+        }
+
+        // 5b. Dynamic import avoids loading graph logic into memory unless needed
+        const { detectAndSaveConnections } = await import('@/lib/ai/graph')
+        
+        // 5c. Run the similarity matching SQL function & write to knowledge graph
+        await detectAndSaveConnections(memory.id)
+      })
+      .catch((err) => {
+        // Keeps errors localized to logs so your API endpoint never crashes for the user
+        console.error('Background processing failed for memory:', memory.id, err)
+      })
 
     // 6. Return immediately — fast response to user
     return NextResponse.json<ApiResponse<Memory>>(
