@@ -7,6 +7,7 @@ import DashboardHeader from './DashboardHeader'
 import AddNoteForm from './AddNoteForm'
 import { useVaultStore } from '@/lib/store/useVaultStore'
 import type { Memory, Collection, Project } from '@/types'
+import UpcomingReminders from './UpcomingReminders'
 
 interface ActiveFilters {
   vault_type: string
@@ -38,6 +39,8 @@ export default function DashboardClient({
 
   return (
     <div className="pt-14 md:pt-0 p-4 md:p-6 max-w-3xl mx-auto">
+
+      <UpcomingReminders />
 
       <DashboardHeader
         count={initialCount}

@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
         // 5b. Dynamic import avoids loading graph logic into memory unless needed
         const { detectAndSaveConnections } = await import('@/lib/ai/graph')
-        
+
         // 5c. Run the similarity matching SQL function & write to knowledge graph
         await detectAndSaveConnections(memory.id)
       })
@@ -114,6 +114,12 @@ export async function POST(request: NextRequest) {
         // Keeps errors localized to logs so your API endpoint never crashes for the user
         console.error('Background processing failed for memory:', memory.id, err)
       })
+
+    // Separate background job — reminder detection (parallel, not chained)
+    const { createReminderIfNeeded } = await import('@/lib/ai/reminders')
+    createReminderIfNeeded(memory.id, user.id, content).catch((err) =>
+      console.error('Reminder detection failed:', memory.id, err)
+    )
 
     // 6. Return immediately — fast response to user
     return NextResponse.json<ApiResponse<Memory>>(
