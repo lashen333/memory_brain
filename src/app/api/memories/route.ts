@@ -1,9 +1,20 @@
 // src\app\api\memories\route.ts
 import { createClient } from '@/lib/supabase/server'
 import { generateEmbedding } from '@/lib/ai/embeddings'
-import { createMemorySchema } from '@/lib/validations/memory'
+import { createMemorySchema, enrichClipMetadata } from '@/lib/validations/memory'
 import { NextRequest, NextResponse } from 'next/server'
 import type { ApiResponse, Memory } from '@/types'
+
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export async function OPTIONS() {
+  return new Response(null, { headers: CORS_HEADERS })
+}
 
 // POST /api/memories — save new memory
 export async function POST(request: NextRequest) {
@@ -15,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json<ApiResponse<null>>(
         { data: null, error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401, headers: CORS_HEADERS }
       )
     }
 
@@ -26,25 +37,28 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json<ApiResponse<null>>(
         { data: null, error: parsed.error.issues[0]?.message },
-        { status: 400 }
+        { status: 400, headers: CORS_HEADERS }
       )
     }
 
     const {
       content,
-      url,
-      source_title,
       vault_type,
       collection_id,
       project_id,
     } = parsed.data
+
+    const { url, source_title } = enrichClipMetadata(
+      parsed.data.url,
+      parsed.data.source_title
+    )
 
     // 3. Work vault — verify project membership
     if (vault_type === 'work') {
       if (!project_id) {
         return NextResponse.json<ApiResponse<null>>(
           { data: null, error: 'Project ID required for work vault' },
-          { status: 400 }
+          { status: 400, headers: CORS_HEADERS }
         )
       }
 
@@ -58,7 +72,7 @@ export async function POST(request: NextRequest) {
       if (!member) {
         return NextResponse.json<ApiResponse<null>>(
           { data: null, error: 'Not a member of this project' },
-          { status: 403 }
+          { status: 403, headers: CORS_HEADERS }
         )
       }
     }
@@ -84,7 +98,7 @@ export async function POST(request: NextRequest) {
       console.error('Insert error:', insertError)
       return NextResponse.json<ApiResponse<null>>(
         { data: null, error: 'Failed to save memory' },
-        { status: 500 }
+        { status: 500, headers: CORS_HEADERS }
       )
     }
 
@@ -124,14 +138,14 @@ export async function POST(request: NextRequest) {
     // 6. Return immediately — fast response to user
     return NextResponse.json<ApiResponse<Memory>>(
       { data: memory as Memory, error: null },
-      { status: 201 }
+      { status: 201, headers: CORS_HEADERS }
     )
 
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json<ApiResponse<null>>(
       { data: null, error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     )
   }
 }
@@ -145,7 +159,7 @@ export async function GET(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json<ApiResponse<null>>(
         { data: null, error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401, headers: CORS_HEADERS }
       )
     }
 
@@ -180,7 +194,7 @@ export async function GET(request: NextRequest) {
       console.error('Fetch error:', error)
       return NextResponse.json<ApiResponse<null>>(
         { data: null, error: 'Failed to fetch memories' },
-        { status: 500 }
+        { status: 500, headers: CORS_HEADERS }
       )
     }
 
@@ -190,13 +204,13 @@ export async function GET(request: NextRequest) {
       page,
       totalPages: Math.ceil((count ?? 0) / limit),
       error: null,
-    })
+    }, { headers: CORS_HEADERS })
 
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json<ApiResponse<null>>(
       { data: null, error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     )
   }
 }

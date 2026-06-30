@@ -40,7 +40,7 @@ export default function DashboardClient({
   return (
     <div className="pt-14 md:pt-0 p-4 md:p-6 max-w-3xl mx-auto">
 
-      <UpcomingReminders />
+      
 
       <DashboardHeader
         count={initialCount}

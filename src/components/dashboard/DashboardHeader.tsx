@@ -7,6 +7,8 @@ import SearchBar from './SearchBar'
 import FilterBar from './FilterBar'
 import ChatPanel from './ChatPanel'
 import KnowledgeGraph from './KnowledgeGraph'
+import UpcomingReminders from './UpcomingReminders'
+
 
 interface ActiveFilters {
   vault_type: string
@@ -57,6 +59,11 @@ export default function DashboardHeader({
               <Sparkles size={14} />
               Ask AI
             </button>
+
+            <div className="flex items-center gap-2 px-4 py-2  text-white text-sm font-medium rounded-xl transition-colors"><UpcomingReminders /></div>
+
+
+
           </div>
         </div>
 

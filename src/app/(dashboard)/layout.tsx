@@ -42,7 +42,8 @@ export default async function DashboardLayout({
         collections={collections}
         projects={projects}
       />
-
+      {/* After StoreInitializer-to store the token extension storage */}
+      
       <div className="hidden md:flex">
         <Sidebar
           user={userProfile}

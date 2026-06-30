@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">M</div>
+        <span>Memory Vault</span>
+      </div>
+      <div id="user-badge" class="user-badge" style="display:none"></div>
+    </div>
+
+    <!-- Not logged in -->
+    <div id="logged-out" style="display:none">
+      <div class="empty-state">
+        <p class="empty-icon">🔐</p>
+        <p class="empty-title">Connect your vault</p>
+        <p class="empty-sub">Open Memory Vault dashboard and login first</p>
+      </div>
+      <button id="login-btn" class="btn-primary">
+        Open Memory Vault →
+      </button>
+    </div>
+
+    <!-- Logged in -->
+    <div id="logged-in" style="display:none">
+      <p class="subtitle">
+        Highlight text on any page → right-click → Save to Memory Vault
+      </p>
+
+      <div class="quick-save-box">
+        <label class="field-label">Quick note</label>
+        <textarea
+          id="quick-input"
+          placeholder="Type a note to save..."
+          rows="3"
+        ></textarea>
+
+        <label class="field-label" style="margin-top:8px">Vault</label>
+        <div class="vault-toggle">
+          <button class="vault-btn active" data-vault="personal" id="p-btn">
+            👤 Personal
+          </button>
+          <button class="vault-btn" data-vault="work" id="w-btn">
+            💼 Work
+          </button>
+        </div>
+
+        <div id="collection-wrap" class="field-wrap">
+          <label class="field-label">Collection</label>
+          <select id="collection-select" class="select-field">
+            <option value="">No collection</option>
+          </select>
+        </div>
+
+        <div id="project-wrap" class="field-wrap" style="display:none">
+          <label class="field-label">Project</label>
+          <select id="project-select" class="select-field">
+            <option value="">Select project</option>
+          </select>
+        </div>
+
+        <button id="quick-save-btn" class="btn-primary" style="margin-top:10px">
+          Save to vault
+        </button>
+      </div>
+
+      <div class="divider"></div>
+
+      <button id="open-dashboard" class="btn-secondary">
+        Open dashboard →
+      </button>
+
+      <button id="logout-btn" class="btn-ghost">
+        Disconnect vault
+      </button>
+    </div>
+
+    <div id="status-msg" class="status" style="display:none"></div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

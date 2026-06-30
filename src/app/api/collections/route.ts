@@ -9,6 +9,17 @@ const createCollectionSchema = z.object({
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#7F77DD'),
 })
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export async function OPTIONS() {
+  return new Response(null, { headers: CORS_HEADERS })
+}
+
+
 // POST — create collection
 export async function POST(request: NextRequest) {
   try {
@@ -60,4 +71,34 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+//for the extension GET method
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401, headers: CORS_HEADERS }
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('collections')
+    .select('id, name, color')
+    .order('created_at')
+
+  if (error) {
+    return NextResponse.json(
+      { error: 'Fetch failed' },
+      { status: 500, headers: CORS_HEADERS }
+    )
+  }
+
+  return NextResponse.json(
+    { data, error: null },
+    { headers: CORS_HEADERS }
+  )
 }

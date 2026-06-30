@@ -1,3 +1,4 @@
+// src\components\dashboard\Sidebar.tsx
 'use client'
 
 import { useState, Suspense } from 'react'
@@ -13,6 +14,7 @@ import CreateCollectionModal from './CreateCollectionModal'
 import CreateProjectModal from './CreateProjectModal'
 import InviteMemberModal from './InviteMemberModal'
 import type { User as UserType, Collection, Project } from '@/types'
+
 
 // ── Props ─────────────────────────────────────
 export interface SidebarProps {
@@ -72,6 +74,7 @@ export default function Sidebar({
               Memory Vault
             </span>
           </div>
+          
         </div>
 
         {/* Nav — Suspense required for useSearchParams */}
