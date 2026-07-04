@@ -77,6 +77,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   sources?: MemorySource[]
+  retrievalMode?: 'temporal' | 'semantic'
   loading?: boolean
 }
 

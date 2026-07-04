@@ -7,10 +7,6 @@ import Toaster from '@/components/ui/Toaster'
 import StoreInitializer from '@/components/dashboard/StoreInitializer'
 import type { User, Collection, Project } from '@/types'
 
-// ← Remove dynamic import entirely
-// dynamic() strips TypeScript prop types
-// Direct import works correctly
-
 export default async function DashboardLayout({
   children,
 }: {
@@ -21,29 +17,45 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login')
 
-  const [profileResult, collectionsResult, projectsResult] = await Promise.all([
+  const [profileResult, collectionsResult, projectMembershipsResult] = await Promise.all([
     supabase.from('users').select('*').eq('id', user.id).single(),
     supabase.from('collections').select('*').order('created_at'),
+    // ← Query project_members directly, not projects with embedded filter
     supabase
-      .from('projects')
-      .select('*, project_members!inner(user_id, role)')
-      .eq('project_members.user_id', user.id)
-      .order('created_at'),
+      .from('project_members')
+      .select(`
+        role,
+        projects (
+          id,
+          name,
+          color,
+          owner_id,
+          created_at
+        )
+      `)
+      .eq('user_id', user.id),
   ])
 
   const userProfile = (profileResult.data ?? null) as User | null
   const collections = (collectionsResult.data ?? []) as Collection[]
-  const projects = (projectsResult.data ?? []) as Project[]
+
+  // ← Flatten the nested projects object out of each membership row
+  type ProjectMembershipRow = {
+    role: string
+    projects: Project[]
+  }
+
+  const projects = (projectMembershipsResult.data as unknown as ProjectMembershipRow[] ?? [])
+    .flatMap((row) => row.projects)
+    .filter(Boolean) as Project[]
 
   return (
     <div className="flex h-screen bg-zinc-950 text-white overflow-hidden">
-      {/* Store init — layout level, runs once ✓ */}
       <StoreInitializer
         collections={collections}
         projects={projects}
       />
-      {/* After StoreInitializer-to store the token extension storage */}
-      
+
       <div className="hidden md:flex">
         <Sidebar
           user={userProfile}

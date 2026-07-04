@@ -76,6 +76,7 @@ export default function ChatPanel({ onClose }: ChatPanelProps) {
         const decoder = new TextDecoder()
         let fullText = ''
         let sources: MemorySource[] = []
+        let retrievalMode: 'temporal' | 'semantic'
 
         if (!reader) throw new Error('No reader')
 
@@ -94,6 +95,7 @@ export default function ChatPanel({ onClose }: ChatPanelProps) {
 
               if (data.done) {
                 sources = data.sources ?? []
+                retrievalMode = data.retrievalMode ?? 'semantic'
               } else if (data.text) {
                 fullText += data.text
                 setMessages((prev) =>
@@ -114,7 +116,7 @@ export default function ChatPanel({ onClose }: ChatPanelProps) {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId
-              ? { ...m, content: fullText, sources, loading: false }
+              ? { ...m, content: fullText, sources, retrievalMode, loading: false }
               : m
           )
         )
@@ -126,11 +128,12 @@ export default function ChatPanel({ onClose }: ChatPanelProps) {
           prev.map((m) =>
             m.id === assistantId
               ? {
-                  ...m,
-                  content: json.answer,
-                  sources: [],
-                  loading: false,
-                }
+                ...m,
+                content: json.answer,
+                sources: [],
+                retrievalMode: json.retrievalMode ?? 'semantic',
+                loading: false,
+              }
               : m
           )
         )
@@ -143,10 +146,10 @@ export default function ChatPanel({ onClose }: ChatPanelProps) {
         prev.map((m) =>
           m.id === assistantId
             ? {
-                ...m,
-                content: 'Something went wrong. Please try again.',
-                loading: false,
-              }
+              ...m,
+              content: 'Something went wrong. Please try again.',
+              loading: false,
+            }
             : m
         )
       )
@@ -264,6 +267,12 @@ export default function ChatPanel({ onClose }: ChatPanelProps) {
                   )}
                 </div>
 
+                {message.retrievalMode && !message.loading && (
+                  <span className="text-xs text-zinc-600 mb-1 inline-block">
+                    {message.retrievalMode === 'temporal' ? '📅 Date-filtered' : '🔮 Semantic match'}
+                  </span>
+                )}
+
                 {message.sources && message.sources.length > 0 && (
                   <SourceCards sources={message.sources} />
                 )}
@@ -349,9 +358,8 @@ function SourceCards({ sources }: { sources: MemorySource[] }) {
           >
             <ChevronDown
               size={12}
-              className={`transition-transform ${
-                expanded ? 'rotate-180' : ''
-              }`}
+              className={`transition-transform ${expanded ? 'rotate-180' : ''
+                }`}
             />
             {expanded
               ? 'Show less'
